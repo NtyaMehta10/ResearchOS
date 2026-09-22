@@ -1,0 +1,180 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String       @id @default(cuid())
+  email        String       @unique
+  name         String
+  passwordHash String
+  avatarUrl    String?
+  institution  String?
+  department   String?
+  role         String       @default("RESEARCHER")
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  projects     Project[]
+  documents    Document[]
+  notes        Note[]
+  collections  Collection[]
+  tags         Tag[]
+  activities   Activity[]
+}
+
+model Project {
+  id          String        @id @default(cuid())
+  userId      String
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  color       String        @default("#4f46e5")
+  icon        String        @default("Folder")
+  status      String        @default("ACTIVE") // ACTIVE, ARCHIVED, COMPLETED
+  visibility  String        @default("PRIVATE") // PRIVATE, SHARED, PUBLIC
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  documents   Document[]
+  notes       Note[]
+  collections Collection[]
+  activities  Activity[]
+  projectTags ProjectTag[]
+
+  @@index([userId, status])
+}
+
+model Collection {
+  id          String     @id @default(cuid())
+  userId      String
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectId   String?
+  project     Project?   @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  name        String
+  description String?
+  color       String     @default("#0ea5e9")
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  documents   Document[]
+
+  @@index([userId])
+  @@index([projectId])
+}
+
+model Document {
+  id              String        @id @default(cuid())
+  userId          String
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectId       String?
+  project         Project?      @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  collectionId    String?
+  collection      Collection?   @relation(fields: [collectionId], references: [id], onDelete: SetNull)
+  title           String
+  fileName        String
+  fileSize        Int
+  mimeType        String
+  filePath        String
+  authors         String?
+  journal         String?
+  publicationYear Int?
+  doi             String?
+  abstract        String?
+  summary         String?       // Extension hook for Phase 2 AI summary
+  embeddingStatus String        @default("NONE") // NONE, PENDING, INDEXED (Phase 2 hook)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  notes           Note[]
+  documentTags    DocumentTag[]
+
+  @@index([userId])
+  @@index([projectId])
+  @@index([collectionId])
+}
+
+model Note {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectId  String?
+  project    Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  documentId String?
+  document   Document? @relation(fields: [documentId], references: [id], onDelete: SetNull)
+  title      String
+  content    String
+  isPinned   Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  noteTags   NoteTag[]
+
+  @@index([userId])
+  @@index([projectId])
+  @@index([documentId])
+}
+
+model Tag {
+  id        String        @id @default(cuid())
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  color     String        @default("#6366f1")
+  createdAt DateTime      @default(now())
+
+  documentTags DocumentTag[]
+  noteTags     NoteTag[]
+  projectTags  ProjectTag[]
+
+  @@unique([userId, name])
+  @@index([userId])
+}
+
+model DocumentTag {
+  documentId String
+  tagId      String
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  tag        Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([documentId, tagId])
+}
+
+model NoteTag {
+  noteId String
+  tagId  String
+  note   Note @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  tag    Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([noteId, tagId])
+}
+
+model ProjectTag {
+  projectId String
+  tagId     String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tag       Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([projectId, tagId])
+}
+
+model Activity {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectId   String?
+  project     Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  action      String   // e.g. "PROJECT_CREATED", "DOC_UPLOADED", "NOTE_CREATED"
+  entityType  String   // "PROJECT", "DOCUMENT", "NOTE", "COLLECTION"
+  entityId    String
+  entityTitle String
+  details     String?
+  createdAt   DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([projectId])
+}

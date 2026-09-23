@@ -20,12 +20,14 @@ export async function GET(
   const relativePath = doc.filePath.startsWith('/') ? doc.filePath.slice(1) : doc.filePath;
   const absolutePath = path.join(process.cwd(), relativePath);
 
+  const safeFileName = doc.fileName.replace(/["\\\r\n]/g, '_');
+
   if (!fs.existsSync(absolutePath)) {
     return new NextResponse('File content placeholder available in ResearchOS storage.', {
       status: 200,
       headers: {
         'Content-Type': 'text/plain',
-        'Content-Disposition': `attachment; filename="${doc.fileName}"`,
+        'Content-Disposition': `attachment; filename="${safeFileName}"`,
       },
     });
   }
@@ -34,7 +36,7 @@ export async function GET(
   return new NextResponse(fileStream as any, {
     headers: {
       'Content-Type': doc.mimeType || 'application/octet-stream',
-      'Content-Disposition': `attachment; filename="${doc.fileName}"`,
+      'Content-Disposition': `attachment; filename="${safeFileName}"`,
     },
   });
 }

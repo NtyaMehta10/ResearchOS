@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -22,6 +22,8 @@ export function Modal({
   children,
   maxWidth = 'lg',
 }: ModalProps) {
+  const modalRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isOpen) {
@@ -31,6 +33,15 @@ export function Modal({
     if (isOpen) {
       document.body.style.overflow = 'hidden';
       window.addEventListener('keydown', handleKeyDown);
+      // Focus trap initial focus
+      const focusableElements = modalRef.current?.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      if (focusableElements && focusableElements.length > 0) {
+        (focusableElements[0] as HTMLElement).focus();
+      } else {
+        modalRef.current?.focus();
+      }
     }
     return () => {
       document.body.style.overflow = 'unset';
@@ -49,19 +60,27 @@ export function Modal({
     '4xl': 'max-w-4xl',
   };
 
+  const titleId = title ? `modal-title-${title.replace(/\s+/g, '-').toLowerCase()}` : undefined;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity animate-in fade-in"
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity animate-in fade-in duration-200"
         onClick={onClose}
+        aria-hidden="true"
       />
 
       {/* Modal Dialog */}
       <div
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
         className={twMerge(
           clsx(
-            'relative w-full bg-card text-card-foreground border border-border rounded-2xl shadow-2xl overflow-hidden z-10 animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]',
+            'relative w-full bg-card text-card-foreground border border-border rounded-2xl shadow-2xl overflow-hidden z-10 animate-in fade-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]',
             maxWidths[maxWidth]
           )
         )}
@@ -70,12 +89,13 @@ export function Modal({
         {(title || description) && (
           <div className="flex items-start justify-between p-6 border-b border-border bg-secondary/30">
             <div>
-              {title && <h2 className="text-lg font-semibold text-foreground">{title}</h2>}
+              {title && <h2 id={titleId} className="text-lg font-semibold text-foreground">{title}</h2>}
               {description && <p className="text-xs text-muted-foreground mt-1">{description}</p>}
             </div>
             <button
               onClick={onClose}
               className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+              aria-label="Close dialog"
             >
               <X className="w-5 h-5" />
             </button>

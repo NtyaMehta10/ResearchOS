@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server';
 import path from 'path';
 import fs from 'fs/promises';
 import { getAuthenticatedUser } from '@/lib/auth';
-import { apiBadRequest, apiSuccess, apiUnauthorized } from '@/lib/api-response';
+import { apiBadRequest, apiSuccess, apiUnauthorized, apiInternalError } from '@/lib/api-response';
 import { getDocuments, createDocument } from '@/lib/services/documentService';
 
 export async function GET(req: NextRequest) {
@@ -56,13 +56,45 @@ export async function POST(req: NextRequest) {
       return apiBadRequest('Document title is required');
     }
 
+    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+    if (file.size > MAX_FILE_SIZE) {
+      return apiBadRequest('File size exceeds 10MB limit');
+    }
+
+    const ALLOWED_MIME_TYPES = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'text/plain',
+      'text/markdown',
+      'application/epub+zip',
+      'image/png',
+      'image/jpeg',
+      'image/gif',
+      'image/webp',
+    ];
+    const mimeType = file.type || 'application/octet-stream';
+    if (!ALLOWED_MIME_TYPES.includes(mimeType)) {
+      return apiBadRequest(`File type '${mimeType}' is not allowed. Permitted types: PDF, Word, TXT, Markdown, EPUB, images.`);
+    }
+
+    const fileExt = path.extname(file.name);
+    const ALLOWED_EXTENSIONS = ['.pdf', '.doc', '.docx', '.txt', '.md', '.epub', '.png', '.jpg', '.jpeg', '.gif', '.webp'];
+    if (fileExt && !ALLOWED_EXTENSIONS.includes(fileExt.toLowerCase())) {
+      return apiBadRequest(`File extension '${fileExt}' is not allowed.`);
+    }
+
     const uploadsDir = path.join(process.cwd(), 'uploads');
     await fs.mkdir(uploadsDir, { recursive: true });
 
-    const fileExt = path.extname(file.name);
     const safeBase = file.name.replace(/\.[^/.]+$/, '').replace(/[^a-zA-Z0-9-_]/g, '_');
     const storedFileName = `${Date.now()}-${safeBase}${fileExt}`;
     const storedFilePath = path.join(uploadsDir, storedFileName);
+
+    const resolvedStoredPath = path.resolve(uploadsDir, storedFileName);
+    if (!resolvedStoredPath.startsWith(path.resolve(uploadsDir))) {
+      return apiBadRequest('Invalid filename');
+    }
 
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
@@ -88,6 +120,8 @@ export async function POST(req: NextRequest) {
     return apiSuccess(document, undefined, 201);
   } catch (error) {
     console.error('Failed to upload document:', error);
-    return apiBadRequest('Failed to process document upload');
+    return apiInternalError('Failed to process document upload');
   }
 }
+
+

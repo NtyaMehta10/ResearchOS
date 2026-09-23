@@ -2,13 +2,28 @@ import React from 'react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
+export interface SkeletonProps extends React.HTMLAttributes<HTMLDivElement> {
+  lines?: number;
+}
+
 export function Skeleton({
   className,
+  lines,
   ...props
-}: React.HTMLAttributes<HTMLDivElement>) {
+}: SkeletonProps) {
+  if (lines) {
+    return (
+      <div className="space-y-2 w-full">
+        {Array.from({ length: lines }).map((_, i) => (
+          <div key={i} className={twMerge(clsx('animate-pulse rounded-md bg-muted/60 h-4', className))} />
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div
-      className={twMerge(clsx('animate-pulse rounded-md bg-muted/80', className))}
+      className={twMerge(clsx('animate-pulse rounded-md bg-muted/60', className))}
       {...props}
     />
   );

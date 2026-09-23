@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server';
 import prisma from '@/lib/db';
 import { hashPassword, signToken, AUTH_COOKIE_NAME } from '@/lib/auth';
 import { registerSchema } from '@/lib/validations';
-import { apiBadRequest, apiSuccess } from '@/lib/api-response';
+import { apiBadRequest, apiSuccess, apiInternalError } from '@/lib/api-response';
 
 export async function POST(req: NextRequest) {
   try {
@@ -60,6 +60,8 @@ export async function POST(req: NextRequest) {
     return response;
   } catch (error) {
     console.error('Registration error:', error);
-    return apiBadRequest('Failed to complete registration');
+    return apiInternalError('Failed to complete registration');
   }
 }
+
+

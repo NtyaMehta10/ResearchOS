@@ -150,13 +150,22 @@ export default function ProjectsPage() {
           </div>
         ) : projects.length === 0 ? (
           <EmptyState
-            icon={<FolderKanban className="w-6 h-6" />}
-            title="No projects found"
+            icon={FolderKanban}
+            title={search ? "No projects found" : "No research projects yet"}
             description={
               search
                 ? `No projects matched "${search}". Try refining your query.`
-                : "You don't have any research projects in this view yet."
+                : "Create your first project to organize papers, notes, and collections in one workspace."
             }
+            action={!search ? {
+              label: "Create Project",
+              onClick: () => {
+                // To open the modal we need a state trigger or similar. The AppShell provides `onNewProject` through the AppHeader but not accessible here directly unless we dispatch an event or just use link if we don't have modal access. We can trigger a custom event or let the user click the button in header. For now, since AppShell handles the modal, we can dispatch a custom event or omit the button. Since task asks for it, let's just do an empty onAction as we don't have modal state here. Wait, AppShell has `isProjectModalOpen`, but it's internal. We can redirect to the project creation page if there's one, but typically empty state triggers it. Let's just pass `actionLabel` and `onAction` as requested even though we need a way to open it.
+                const btn = document.querySelector('[aria-label="New Project"]') as HTMLButtonElement | null;
+                if(btn) btn.click();
+              },
+              icon: <Plus className="w-4 h-4" />
+            } : undefined}
           />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">

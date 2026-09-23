@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { getAuthenticatedUser } from '@/lib/auth';
-import { apiBadRequest, apiSuccess, apiUnauthorized } from '@/lib/api-response';
+import { apiBadRequest, apiSuccess, apiUnauthorized, apiInternalError } from '@/lib/api-response';
 import { noteSchema } from '@/lib/validations';
 import { getNotes, createNote } from '@/lib/services/noteService';
 
@@ -44,6 +44,8 @@ export async function POST(req: NextRequest) {
     return apiSuccess(note, undefined, 201);
   } catch (error) {
     console.error('Failed to create note:', error);
-    return apiBadRequest('Failed to create note');
+    return apiInternalError('Failed to create note');
   }
 }
+
+

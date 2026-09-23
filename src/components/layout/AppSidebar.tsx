@@ -89,6 +89,7 @@ export function AppSidebar({ onNewProject }: AppSidebarProps) {
           onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
           className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
           title="Toggle light/dark theme"
+          aria-label="Toggle theme"
         >
           {resolvedTheme === 'dark' ? (
             <Sun className="w-4 h-4 text-amber-400" />
@@ -99,7 +100,7 @@ export function AppSidebar({ onNewProject }: AppSidebarProps) {
       </div>
 
       {/* Main Nav Items */}
-      <div className="flex-1 overflow-y-auto px-3 py-4 space-y-6">
+      <nav aria-label="Main navigation" className="flex-1 overflow-y-auto px-3 py-4 space-y-6">
         <div className="space-y-1">
           <p className="px-3 pb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">
             Workspace
@@ -115,6 +116,7 @@ export function AppSidebar({ onNewProject }: AppSidebarProps) {
               <Link
                 key={item.href}
                 href={item.href}
+                aria-current={isActive ? 'page' : undefined}
                 className={twMerge(
                   clsx(
                     'flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium transition-all group',
@@ -197,7 +199,7 @@ export function AppSidebar({ onNewProject }: AppSidebarProps) {
             </div>
           )}
         </div>
-      </div>
+      </nav>
 
       {/* User Footer Profile & Logout */}
       <div className="p-3 border-t border-border bg-card/40">
@@ -224,6 +226,7 @@ export function AppSidebar({ onNewProject }: AppSidebarProps) {
             onClick={() => logout()}
             className="p-1.5 rounded-lg text-muted-foreground hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors shrink-0"
             title="Log out"
+            aria-label="Log out"
           >
             <LogOut className="w-4 h-4" />
           </button>

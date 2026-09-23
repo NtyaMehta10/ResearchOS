@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { getAuthenticatedUser } from '@/lib/auth';
-import { apiBadRequest, apiNotFound, apiSuccess, apiUnauthorized } from '@/lib/api-response';
+import { apiBadRequest, apiNotFound, apiSuccess, apiUnauthorized, apiInternalError } from '@/lib/api-response';
 import { documentUpdateSchema } from '@/lib/validations';
 import { getDocumentById, updateDocument, deleteDocument } from '@/lib/services/documentService';
 
@@ -42,7 +42,7 @@ export async function PATCH(
     return apiSuccess(updated);
   } catch (error) {
     console.error('Failed to update document:', error);
-    return apiBadRequest('Failed to update document');
+    return apiInternalError('Failed to update document');
   }
 }
 
@@ -60,3 +60,5 @@ export async function DELETE(
 
   return apiSuccess({ message: 'Document deleted successfully' });
 }
+
+

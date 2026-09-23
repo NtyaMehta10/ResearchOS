@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { getAuthenticatedUser } from '@/lib/auth';
-import { apiBadRequest, apiNotFound, apiSuccess, apiUnauthorized } from '@/lib/api-response';
+import { apiBadRequest, apiNotFound, apiSuccess, apiUnauthorized, apiInternalError } from '@/lib/api-response';
 import { updateProjectSchema } from '@/lib/validations';
 import { getProjectById, updateProject, deleteProject } from '@/lib/services/projectService';
 
@@ -42,7 +42,7 @@ export async function PATCH(
     return apiSuccess(updated);
   } catch (error) {
     console.error('Failed to update project:', error);
-    return apiBadRequest('Failed to update project');
+    return apiInternalError('Failed to update project');
   }
 }
 
@@ -60,3 +60,4 @@ export async function DELETE(
 
   return apiSuccess({ message: 'Project deleted successfully' });
 }
+

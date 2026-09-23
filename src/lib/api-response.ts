@@ -50,3 +50,7 @@ export function apiForbidden(error = 'Forbidden: insufficient permissions') {
 export function apiNotFound(error = 'Resource not found') {
   return apiError(error, 404);
 }
+
+export function apiInternalError(error = 'Internal server error') {
+  return apiError(error, 500);
+}

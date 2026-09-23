@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { getAuthenticatedUser } from '@/lib/auth';
-import { apiBadRequest, apiNotFound, apiSuccess, apiUnauthorized } from '@/lib/api-response';
+import { apiBadRequest, apiNotFound, apiSuccess, apiUnauthorized, apiInternalError } from '@/lib/api-response';
 import { updateNoteSchema } from '@/lib/validations';
 import { getNoteById, updateNote, deleteNote } from '@/lib/services/noteService';
 
@@ -42,7 +42,7 @@ export async function PATCH(
     return apiSuccess(updated);
   } catch (error) {
     console.error('Failed to update note:', error);
-    return apiBadRequest('Failed to update note');
+    return apiInternalError('Failed to update note');
   }
 }
 
@@ -60,3 +60,5 @@ export async function DELETE(
 
   return apiSuccess({ message: 'Note deleted successfully' });
 }
+
+

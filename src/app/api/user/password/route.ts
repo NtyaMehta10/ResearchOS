@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import prisma from '@/lib/db';
 import { getAuthenticatedUser, comparePassword, hashPassword } from '@/lib/auth';
-import { apiBadRequest, apiSuccess, apiUnauthorized } from '@/lib/api-response';
+import { apiBadRequest, apiSuccess, apiUnauthorized, apiInternalError } from '@/lib/api-response';
 import { changePasswordSchema } from '@/lib/validations';
 
 export async function PATCH(req: NextRequest) {
@@ -38,6 +38,8 @@ export async function PATCH(req: NextRequest) {
     return apiSuccess({ message: 'Password changed successfully' });
   } catch (error) {
     console.error('Failed to update password:', error);
-    return apiBadRequest('Failed to update password');
+    return apiInternalError('Failed to update password');
   }
 }
+
+

@@ -15,6 +15,9 @@ export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
   ({ className, label, error, helperText, leftIcon, rightIcon, id, ...props }, ref) => {
     const inputId = id || (label ? label.toLowerCase().replace(/\s+/g, '-') : undefined);
+    const errorId = error ? `${inputId}-error` : undefined;
+    const helperId = helperText ? `${inputId}-helper` : undefined;
+    const describedBy = errorId || helperId;
 
     return (
       <div className="w-full space-y-1.5">
@@ -32,12 +35,14 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           <input
             id={inputId}
             ref={ref}
+            aria-invalid={!!error}
+            aria-describedby={describedBy}
             className={twMerge(
               clsx(
                 'w-full bg-background border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed',
                 leftIcon ? 'pl-9' : '',
                 rightIcon ? 'pr-9' : '',
-                error ? 'border-rose-500 focus:ring-rose-500 focus:border-rose-500' : 'border-border',
+                error ? 'border-rose-500 focus:ring-rose-500 focus:border-rose-500 text-rose-600' : 'border-border',
                 className
               )
             )}
@@ -50,9 +55,9 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           )}
         </div>
         {error ? (
-          <p className="text-xs text-rose-500 font-medium">{error}</p>
+          <p id={errorId} className="text-xs text-rose-500 font-medium">{error}</p>
         ) : helperText ? (
-          <p className="text-xs text-muted-foreground">{helperText}</p>
+          <p id={helperId} className="text-xs text-muted-foreground">{helperText}</p>
         ) : null}
       </div>
     );

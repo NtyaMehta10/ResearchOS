@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { getAuthenticatedUser } from '@/lib/auth';
-import { apiBadRequest, apiSuccess, apiUnauthorized } from '@/lib/api-response';
+import { apiBadRequest, apiSuccess, apiUnauthorized, apiInternalError } from '@/lib/api-response';
 import { tagSchema } from '@/lib/validations';
 import { getTags, createTag } from '@/lib/services/tagService';
 
@@ -32,6 +32,8 @@ export async function POST(req: NextRequest) {
     return apiSuccess(tag, undefined, 201);
   } catch (error) {
     console.error('Failed to create tag:', error);
-    return apiBadRequest('Failed to create tag');
+    return apiInternalError('Failed to create tag');
   }
 }
+
+

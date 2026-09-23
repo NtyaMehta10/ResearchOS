@@ -44,7 +44,8 @@ export function AppHeader({
           <button
             onClick={onToggleMobileMenu}
             className="p-2 rounded-lg text-muted-foreground hover:text-foreground md:hidden"
-            aria-label="Toggle navigation drawer"
+            aria-label="Open navigation menu"
+            aria-expanded={false}
           >
             <Menu className="w-5 h-5" />
           </button>
@@ -65,6 +66,7 @@ export function AppHeader({
       <div className="flex-1 max-w-md hidden sm:block">
         <button
           onClick={onOpenSearch}
+          aria-label="Search research papers, notes, tags"
           className="w-full flex items-center justify-between px-3.5 py-1.5 rounded-lg border border-border bg-background/60 hover:bg-secondary/70 text-xs text-muted-foreground transition-all group"
         >
           <div className="flex items-center gap-2">
@@ -83,6 +85,7 @@ export function AppHeader({
           onClick={onOpenSearch}
           className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary sm:hidden"
           title="Search"
+          aria-label="Search"
         >
           <Search className="w-4 h-4" />
         </button>

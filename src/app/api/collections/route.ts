@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { getAuthenticatedUser } from '@/lib/auth';
-import { apiBadRequest, apiNotFound, apiSuccess, apiUnauthorized } from '@/lib/api-response';
+import { apiBadRequest, apiNotFound, apiSuccess, apiUnauthorized, apiInternalError } from '@/lib/api-response';
 import { collectionSchema, updateCollectionSchema } from '@/lib/validations';
 import {
   getCollections,
@@ -40,6 +40,8 @@ export async function POST(req: NextRequest) {
     return apiSuccess(collection, undefined, 201);
   } catch (error) {
     console.error('Failed to create collection:', error);
-    return apiBadRequest('Failed to create collection');
+    return apiInternalError('Failed to create collection');
   }
 }
+
+

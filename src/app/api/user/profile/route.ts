@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import prisma from '@/lib/db';
 import { getAuthenticatedUser } from '@/lib/auth';
-import { apiBadRequest, apiSuccess, apiUnauthorized } from '@/lib/api-response';
+import { apiBadRequest, apiSuccess, apiUnauthorized, apiInternalError } from '@/lib/api-response';
 import { updateProfileSchema } from '@/lib/validations';
 
 export async function GET(req: NextRequest) {
@@ -41,6 +41,8 @@ export async function PATCH(req: NextRequest) {
     return apiSuccess(updated);
   } catch (error) {
     console.error('Failed to update profile:', error);
-    return apiBadRequest('Failed to update profile');
+    return apiInternalError('Failed to update profile');
   }
 }
+
+

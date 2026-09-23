@@ -70,6 +70,7 @@ export default function LoginPage() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="e.g. demo@researchos.io"
               leftIcon={<Mail className="w-4 h-4" />}
+              autoComplete="email"
               required
               autoFocus
             />
@@ -81,6 +82,7 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••••••"
               leftIcon={<Lock className="w-4 h-4" />}
+              autoComplete="current-password"
               required
             />
 
@@ -88,6 +90,7 @@ export default function LoginPage() {
               type="submit"
               className="w-full mt-2"
               isLoading={isLoading}
+              disabled={isLoading}
               rightIcon={<ArrowRight className="w-4 h-4" />}
             >
               Sign In

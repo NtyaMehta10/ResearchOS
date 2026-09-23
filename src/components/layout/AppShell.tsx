@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { AppSidebar } from './AppSidebar';
 import { AppHeader } from './AppHeader';
@@ -11,6 +11,7 @@ import { UploadDocumentModal } from '@/components/modals/UploadDocumentModal';
 import { NewNoteModal } from '@/components/modals/NewNoteModal';
 import { NewCollectionModal } from '@/components/modals/NewCollectionModal';
 import { Loader2 } from 'lucide-react';
+import { MobileNav } from './MobileNav';
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -22,6 +23,7 @@ interface AppShellProps {
 export function AppShell({ children, title, subtitle, onRefreshData }: AppShellProps) {
   const { user, isLoading } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
@@ -35,6 +37,10 @@ export function AppShell({ children, title, subtitle, onRefreshData }: AppShellP
       router.push('/login');
     }
   }, [user, isLoading, router]);
+
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
 
   if (isLoading) {
     return (
@@ -66,12 +72,12 @@ export function AppShell({ children, title, subtitle, onRefreshData }: AppShellP
 
       {/* Mobile Sidebar Overlay */}
       {mobileMenuOpen && (
-        <div className="fixed inset-0 z-50 md:hidden flex">
+        <div className="fixed inset-0 z-50 md:hidden flex" role="dialog" aria-modal="true" aria-label="Mobile navigation">
           <div
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300"
             onClick={() => setMobileMenuOpen(false)}
           />
-          <div className="relative z-10">
+          <div className="relative z-10 animate-in slide-in-from-left duration-300">
             <AppSidebar
               onNewProject={() => {
                 setMobileMenuOpen(false);
@@ -103,10 +109,11 @@ export function AppShell({ children, title, subtitle, onRefreshData }: AppShellP
           onToggleMobileMenu={() => setMobileMenuOpen(!mobileMenuOpen)}
         />
 
-        <main className="flex-1 overflow-y-auto p-4 md:p-8">
+        <main className="flex-1 overflow-y-auto p-4 md:p-8 pb-16 md:pb-8">
           <div className="max-w-7xl mx-auto">{children}</div>
         </main>
       </div>
+      <MobileNav />
 
       {/* Modals */}
       <CommandPalette

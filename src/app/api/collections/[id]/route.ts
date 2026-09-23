@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { getAuthenticatedUser } from '@/lib/auth';
-import { apiBadRequest, apiNotFound, apiSuccess, apiUnauthorized } from '@/lib/api-response';
+import { apiBadRequest, apiNotFound, apiSuccess, apiUnauthorized, apiInternalError } from '@/lib/api-response';
 import { updateCollectionSchema } from '@/lib/validations';
 import { updateCollection, deleteCollection } from '@/lib/services/collectionService';
 
@@ -27,7 +27,7 @@ export async function PATCH(
     return apiSuccess(updated);
   } catch (error) {
     console.error('Failed to update collection:', error);
-    return apiBadRequest('Failed to update collection');
+    return apiInternalError('Failed to update collection');
   }
 }
 
@@ -45,3 +45,5 @@ export async function DELETE(
 
   return apiSuccess({ message: 'Collection deleted successfully' });
 }
+
+

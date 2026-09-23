@@ -3,7 +3,11 @@ import bcrypt from 'bcryptjs';
 import { NextRequest } from 'next/server';
 import prisma from './db';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'research-os-production-secret-key-2026';
+const _jwtSecret = process.env.JWT_SECRET;
+if (!_jwtSecret) {
+  throw new Error('JWT_SECRET environment variable is required');
+}
+const JWT_SECRET = _jwtSecret as string;
 const TOKEN_EXPIRY = '7d';
 export const AUTH_COOKIE_NAME = 'researchos_token';
 

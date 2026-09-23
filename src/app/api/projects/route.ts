@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { getAuthenticatedUser } from '@/lib/auth';
-import { apiBadRequest, apiSuccess, apiUnauthorized } from '@/lib/api-response';
+import { apiBadRequest, apiSuccess, apiUnauthorized, apiInternalError } from '@/lib/api-response';
 import { projectSchema } from '@/lib/validations';
 import { getProjects, createProject } from '@/lib/services/projectService';
 
@@ -36,6 +36,8 @@ export async function POST(req: NextRequest) {
     return apiSuccess(project, undefined, 201);
   } catch (error) {
     console.error('Failed to create project:', error);
-    return apiBadRequest('Failed to create project');
+    return apiInternalError('Failed to create project');
   }
 }
+
+

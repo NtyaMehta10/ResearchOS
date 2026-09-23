@@ -33,6 +33,7 @@ export const projectSchema = z.object({
   status: z.enum(['ACTIVE', 'ARCHIVED', 'COMPLETED']).default('ACTIVE'),
   visibility: z.enum(['PRIVATE', 'SHARED', 'PUBLIC']).default('PRIVATE'),
   tagIds: z.array(z.string()).optional(),
+  isFavorite: z.boolean().optional(),
 });
 
 export const updateProjectSchema = projectSchema.partial();
@@ -56,6 +57,8 @@ export const documentUpdateSchema = z.object({
   doi: z.string().max(150).optional(),
   abstract: z.string().max(5000).optional(),
   tagIds: z.array(z.string()).optional(),
+  isFavorite: z.boolean().optional(),
+  isArchived: z.boolean().optional(),
 });
 
 export const noteSchema = z.object({
@@ -73,3 +76,16 @@ export const tagSchema = z.object({
   name: z.string().min(1, 'Tag name is required').max(50),
   color: z.string().regex(/^#[0-9a-fA-F]{6}$/).default('#6366f1'),
 });
+
+export const createTaskSchema = z.object({
+  title: z.string().min(1, 'Task title is required').max(200),
+  description: z.string().optional(),
+  projectId: z.string().nullable().optional(),
+  documentId: z.string().nullable().optional(),
+  noteId: z.string().nullable().optional(),
+  status: z.enum(['TODO', 'IN_PROGRESS', 'COMPLETED']).default('TODO'),
+  priority: z.enum(['LOW', 'MEDIUM', 'HIGH']).default('MEDIUM'),
+  dueDate: z.string().nullable().optional(),
+});
+
+export const updateTaskSchema = createTaskSchema.partial();

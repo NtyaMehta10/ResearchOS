@@ -39,6 +39,8 @@ export async function getDocuments(
     search?: string;
     sortBy?: 'title' | 'createdAt' | 'fileSize';
     sortOrder?: 'asc' | 'desc';
+    isFavorite?: boolean;
+    isArchived?: boolean;
   }
 ) {
   const where: any = { userId };
@@ -65,6 +67,14 @@ export async function getDocuments(
       { doi: { contains: filters.search } },
       { abstract: { contains: filters.search } },
     ];
+  }
+
+  if (filters?.isFavorite !== undefined) {
+    where.isFavorite = filters.isFavorite;
+  }
+
+  if (filters?.isArchived !== undefined) {
+    where.isArchived = filters.isArchived;
   }
 
   const orderBy = {
@@ -195,3 +205,136 @@ export async function deleteDocument(userId: string, documentId: string) {
     where: { id: documentId },
   });
 }
+
+export async function bulkDeleteDocuments(userId: string, documentIds: string[]) {
+  // Validate ownership first
+  const docs = await prisma.document.findMany({
+    where: { id: { in: documentIds }, userId },
+    select: { id: true, title: true, projectId: true },
+  });
+
+  if (docs.length === 0) return { count: 0 };
+
+  const validIds = docs.map(d => d.id);
+
+  // Log activity
+  for (const doc of docs) {
+    await logActivity({
+      userId,
+      projectId: doc.projectId,
+      action: 'DOC_DELETED',
+      entityType: 'DOCUMENT',
+      entityId: doc.id,
+      entityTitle: doc.title,
+      details: `Bulk deleted document: ${doc.title}`,
+    });
+  }
+
+  return prisma.document.deleteMany({
+    where: { id: { in: validIds } },
+  });
+}
+
+export async function bulkUpdateDocuments(
+  userId: string, 
+  documentIds: string[], 
+  data: { isArchived?: boolean; isFavorite?: boolean; collectionId?: string | null }
+) {
+  const docs = await prisma.document.findMany({
+    where: { id: { in: documentIds }, userId },
+    select: { id: true, title: true, projectId: true },
+  });
+
+  if (docs.length === 0) return { count: 0 };
+
+  const validIds = docs.map(d => d.id);
+
+  const updated = await prisma.document.updateMany({
+    where: { id: { in: validIds } },
+    data,
+  });
+
+  for (const doc of docs) {
+    await logActivity({
+      userId,
+      projectId: doc.projectId,
+      action: 'DOC_UPDATED',
+      entityType: 'DOCUMENT',
+      entityId: doc.id,
+      entityTitle: doc.title,
+      details: `Bulk updated document metadata for: ${doc.title}`,
+    });
+  }
+
+  return updated;
+}
+
+export async function createDocumentVersion(
+  userId: string,
+  documentId: string,
+  versionData: {
+    fileName: string;
+    fileSize: number;
+    mimeType: string;
+    filePath: string;
+  }
+) {
+  const existing = await prisma.document.findFirst({
+    where: { id: documentId, userId },
+  });
+
+  if (!existing) return null;
+
+  const newVersionNumber = existing.version + 1;
+
+  // Transaction: Update document and create version
+  const [updatedDoc, newVersion] = await prisma.$transaction([
+    prisma.document.update({
+      where: { id: documentId },
+      data: {
+        version: newVersionNumber,
+        fileName: versionData.fileName,
+        fileSize: versionData.fileSize,
+        mimeType: versionData.mimeType,
+        filePath: versionData.filePath,
+      },
+    }),
+    prisma.documentVersion.create({
+      data: {
+        documentId,
+        version: newVersionNumber,
+        fileName: versionData.fileName,
+        fileSize: versionData.fileSize,
+        mimeType: versionData.mimeType,
+        filePath: versionData.filePath,
+        uploaderId: userId,
+      },
+    }),
+  ]);
+
+  await logActivity({
+    userId,
+    projectId: existing.projectId,
+    action: 'DOC_UPDATED',
+    entityType: 'DOCUMENT',
+    entityId: existing.id,
+    entityTitle: existing.title,
+    details: `Uploaded version ${newVersionNumber} of document`,
+  });
+
+  return { document: updatedDoc, version: newVersion };
+}
+
+export async function getDocumentVersions(userId: string, documentId: string) {
+  const existing = await prisma.document.findFirst({
+    where: { id: documentId, userId },
+  });
+
+  if (!existing) return null;
+
+  return prisma.documentVersion.findMany({
+    where: { documentId },
+    orderBy: { version: 'desc' },
+  });
+}
+

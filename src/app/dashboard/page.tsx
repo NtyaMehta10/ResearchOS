@@ -176,68 +176,113 @@ export default function DashboardPage() {
           </Card>
         </div>
 
-        {/* Active Projects Grid */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-base font-bold text-foreground">Active Projects</h2>
-              <p className="text-xs text-muted-foreground">Primary workspaces currently under investigation</p>
+        {/* Favorite Projects & Active Projects Grid */}
+        <div className="space-y-8">
+          {/* Favorite Projects */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-base font-bold text-foreground">Favorite Projects</h2>
+                <p className="text-xs text-muted-foreground">Quick access to your starred workspaces</p>
+              </div>
             </div>
-            <Link href="/projects" className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1">
-              <span>View all projects</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
+
+            {loading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <Skeleton className="h-24 rounded-xl" />
+              </div>
+            ) : projects.filter(p => p.isFavorite).length === 0 ? (
+              <div className="p-6 text-center rounded-xl border border-dashed border-border bg-card">
+                <p className="text-sm font-semibold text-foreground">No favorite projects</p>
+                <p className="text-xs text-muted-foreground mt-1">Star a project to pin it here.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {projects.filter(p => p.isFavorite).map((p) => (
+                  <Link key={p.id} href={`/projects/${p.id}`}>
+                    <Card className="h-full hover:border-indigo-500/50 hover:shadow-md transition-all group flex flex-col justify-between">
+                      <CardHeader className="p-4 pb-2">
+                        <div className="flex items-start justify-between gap-3">
+                          <div
+                            className="w-8 h-8 rounded-xl flex items-center justify-center text-white shrink-0 shadow-sm"
+                            style={{ backgroundColor: p.color || '#4f46e5' }}
+                          >
+                            <FolderKanban className="w-4 h-4" />
+                          </div>
+                          <Pin className="w-4 h-4 text-amber-500 fill-amber-500" />
+                        </div>
+                        <CardTitle className="text-sm font-bold text-foreground mt-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 line-clamp-1">
+                          {p.title}
+                        </CardTitle>
+                      </CardHeader>
+                    </Card>
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
 
-          {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <Skeleton className="h-40 rounded-xl" />
-              <Skeleton className="h-40 rounded-xl" />
-              <Skeleton className="h-40 rounded-xl" />
+          {/* Active Projects */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-base font-bold text-foreground">Active Projects</h2>
+                <p className="text-xs text-muted-foreground">Primary workspaces currently under investigation</p>
+              </div>
+              <Link href="/projects" className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1">
+                <span>View all projects</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
             </div>
-          ) : projects.length === 0 ? (
-            <div className="p-8 text-center rounded-xl border border-dashed border-border bg-card">
-              <p className="text-sm font-semibold text-foreground">No active research projects</p>
-              <p className="text-xs text-muted-foreground mt-1">Create your first research workspace to begin.</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {projects.map((p) => (
-                <Link key={p.id} href={`/projects/${p.id}`}>
-                  <Card className="h-full hover:border-indigo-500/50 hover:shadow-md transition-all group flex flex-col justify-between">
-                    <CardHeader className="p-5 pb-3">
-                      <div className="flex items-start justify-between gap-3">
-                        <div
-                          className="w-9 h-9 rounded-xl flex items-center justify-center text-white shrink-0 shadow-sm"
-                          style={{ backgroundColor: p.color || '#4f46e5' }}
-                        >
-                          <FolderKanban className="w-4 h-4" />
+
+            {loading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <Skeleton className="h-40 rounded-xl" />
+                <Skeleton className="h-40 rounded-xl" />
+                <Skeleton className="h-40 rounded-xl" />
+              </div>
+            ) : projects.length === 0 ? (
+              <div className="p-8 text-center rounded-xl border border-dashed border-border bg-card">
+                <p className="text-sm font-semibold text-foreground">No active research projects</p>
+                <p className="text-xs text-muted-foreground mt-1">Create your first research workspace to begin.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {projects.map((p) => (
+                  <Link key={p.id} href={`/projects/${p.id}`}>
+                    <Card className="h-full hover:border-indigo-500/50 hover:shadow-md transition-all group flex flex-col justify-between">
+                      <CardHeader className="p-5 pb-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <div
+                            className="w-9 h-9 rounded-xl flex items-center justify-center text-white shrink-0 shadow-sm"
+                            style={{ backgroundColor: p.color || '#4f46e5' }}
+                          >
+                            <FolderKanban className="w-4 h-4" />
+                          </div>
+                          <Badge variant="outline" className="text-[10px]">
+                            {p.status}
+                          </Badge>
                         </div>
-                        <Badge variant="outline" className="text-[10px]">
-                          {p.status}
-                        </Badge>
-                      </div>
-                      <CardTitle className="text-sm font-bold text-foreground mt-3 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 line-clamp-1">
-                        {p.title}
-                      </CardTitle>
-                      <p className="text-xs text-muted-foreground mt-1 line-clamp-2 leading-relaxed">
-                        {p.description || 'No description provided.'}
-                      </p>
-                    </CardHeader>
-                    <CardContent className="p-5 pt-0">
-                      <div className="flex items-center gap-2 pt-3 border-t border-border/60 text-xs text-muted-foreground">
-                        <span>{p._count?.documents || 0} papers</span>
-                        <span>•</span>
-                        <span>{p._count?.notes || 0} notes</span>
-                        <span>•</span>
-                        <span>{p._count?.collections || 0} collections</span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))}
-            </div>
-          )}
+                        <CardTitle className="text-sm font-bold text-foreground mt-3 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 line-clamp-1">
+                          {p.title}
+                        </CardTitle>
+                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2 leading-relaxed">
+                          {p.description || 'No description provided.'}
+                        </p>
+                      </CardHeader>
+                      <CardContent className="p-5 pt-0">
+                        <div className="flex items-center gap-2 pt-3 border-t border-border/60 text-xs text-muted-foreground">
+                          <span>{p._count?.documents || 0} docs</span>
+                          <span>•</span>
+                          <span>{p._count?.tasks || 0} tasks</span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Dual Column: Recent Documents + Recent Notes */}

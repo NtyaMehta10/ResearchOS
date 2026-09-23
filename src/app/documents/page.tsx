@@ -21,6 +21,8 @@ import {
   ExternalLink,
   Filter,
   Layers,
+  Star,
+  Archive,
 } from 'lucide-react';
 
 export default function DocumentsPage() {
@@ -40,6 +42,8 @@ export default function DocumentsPage() {
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
 
   const { success, error } = useToast();
 
@@ -244,15 +248,19 @@ export default function DocumentsPage() {
                   className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-secondary/40 transition-colors group"
                 >
                   <div className="flex items-start gap-3.5 min-w-0">
-                    <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 mt-0.5">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 mt-0.5 relative group-hover:opacity-100">
                       <FileText className="w-5 h-5" />
                     </div>
                     <div className="min-w-0">
-                      <Link href={`/documents/${doc.id}`}>
-                        <h4 className="text-sm font-bold text-foreground group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-1">
-                          {doc.title}
-                        </h4>
-                      </Link>
+                      <div className="flex items-center gap-2">
+                        <Link href={`/documents/${doc.id}`}>
+                          <h4 className="text-sm font-bold text-foreground group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-1">
+                            {doc.title}
+                          </h4>
+                        </Link>
+                        {doc.isFavorite && <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500 shrink-0" />}
+                        {doc.isArchived && <Badge variant="outline" className="text-[9px]">Archived</Badge>}
+                      </div>
 
                       <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
                         {doc.authors ? `${doc.authors} • ` : ''}

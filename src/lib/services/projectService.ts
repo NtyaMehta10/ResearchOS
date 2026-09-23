@@ -79,6 +79,13 @@ export async function getProjectById(userId: string, projectId: string) {
           noteTags: { include: { tag: true } },
         },
       },
+      tasks: {
+        orderBy: [
+          { priority: 'desc' },
+          { dueDate: 'asc' },
+          { createdAt: 'desc' }
+        ],
+      },
       activities: {
         take: 10,
         orderBy: { createdAt: 'desc' },
@@ -88,6 +95,7 @@ export async function getProjectById(userId: string, projectId: string) {
           documents: true,
           notes: true,
           collections: true,
+          tasks: true,
         },
       },
     },
@@ -210,6 +218,7 @@ export async function getProjectStats(userId: string, projectId: string) {
           documents: true,
           notes: true,
           collections: true,
+          tasks: true,
         },
       },
     },
@@ -224,11 +233,18 @@ export async function getProjectStats(userId: string, projectId: string) {
 
   const totalBytes = docs.reduce((acc, d) => acc + d.fileSize, 0);
 
+  const completedTasks = await prisma.task.count({
+    where: { projectId, userId, status: 'COMPLETED' },
+  });
+
   return {
     ...project,
     totalStorageBytes: totalBytes,
     documentCount: project._count.documents,
     noteCount: project._count.notes,
     collectionCount: project._count.collections,
+    taskCount: project._count.tasks,
+    completedTaskCount: completedTasks,
+    remainingTaskCount: project._count.tasks - completedTasks,
   };
 }

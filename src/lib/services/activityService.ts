@@ -17,8 +17,12 @@ export interface LogActivityParams {
     | 'COLLECTION_CREATED'
     | 'COLLECTION_UPDATED'
     | 'COLLECTION_DELETED'
-    | 'TAG_CREATED';
-  entityType: 'PROJECT' | 'DOCUMENT' | 'NOTE' | 'COLLECTION' | 'TAG';
+    | 'TAG_CREATED'
+    | 'TASK_CREATED'
+    | 'TASK_UPDATED'
+    | 'TASK_COMPLETED'
+    | 'TASK_DELETED';
+  entityType: 'PROJECT' | 'DOCUMENT' | 'NOTE' | 'COLLECTION' | 'TAG' | 'TASK';
   entityId: string;
   entityTitle: string;
   details?: string;

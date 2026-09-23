@@ -320,6 +320,18 @@ export default function DocumentDetailPage({ params }: { params: Promise<{ id: s
             </div>
           )}
         </div>
+        {/* Versions Section */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-base font-bold text-foreground">Version History</h3>
+              <p className="text-xs text-muted-foreground">Previous uploads of this document</p>
+            </div>
+            {/* Version upload would go here */}
+          </div>
+          {/* Note: In a full implementation, we'd fetch versions from /api/documents/[id]/versions */}
+        </div>
+
       </div>
 
       {/* Edit Metadata Modal */}

@@ -14,6 +14,8 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { UploadDocumentModal } from '@/components/modals/UploadDocumentModal';
 import { NewNoteModal } from '@/components/modals/NewNoteModal';
 import { NewCollectionModal } from '@/components/modals/NewCollectionModal';
+import { NewTaskModal } from '@/components/modals/NewTaskModal';
+import { TaskCard, Task } from '@/components/ui/TaskCard';
 import { useToast } from '@/components/providers/ToastProvider';
 import {
   FolderKanban,
@@ -31,6 +33,8 @@ import {
   Download,
   Pin,
   Clock,
+  CheckSquare,
+  Star,
 } from 'lucide-react';
 
 export default function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -45,6 +49,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
   const [isCollectionModalOpen, setIsCollectionModalOpen] = useState(false);
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
@@ -119,6 +124,25 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
     }
   };
 
+  const handleFavoriteToggle = async () => {
+    if (!project) return;
+    const newFav = !project.isFavorite;
+    try {
+      const res = await fetch(`/api/projects/${projectId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isFavorite: newFav }),
+      });
+      const json = await res.json();
+      if (res.ok && json.success) {
+        success(newFav ? 'Added to favorites' : 'Removed from favorites');
+        fetchProjectData();
+      }
+    } catch {
+      error('Failed to update favorite status');
+    }
+  };
+
   if (loading && !project) {
     return (
       <AppShell title="Loading Project Workspace...">
@@ -152,7 +176,13 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
       count: project.collections?.length || 0,
       icon: <FolderGit2 className="w-3.5 h-3.5" />,
     },
-    { id: 'activity', label: 'Audit Stream', icon: <Activity className="w-3.5 h-3.5" /> },
+    {
+      id: 'tasks',
+      label: 'Tasks',
+      count: project.tasks?.length || 0,
+      icon: <CheckSquare className="w-3.5 h-3.5" />,
+    },
+    { id: 'timeline', label: 'Timeline', icon: <Activity className="w-3.5 h-3.5" /> },
     {
       id: 'ai-readiness',
       label: 'AI Layer (Phase 2)',
@@ -187,6 +217,9 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                   <h1 className="text-lg md:text-xl font-extrabold text-foreground">
                     {project.title}
                   </h1>
+                  <button onClick={handleFavoriteToggle} className="text-muted-foreground hover:text-amber-500 transition-colors">
+                    <Star className={`w-5 h-5 ${project.isFavorite ? 'fill-amber-500 text-amber-500' : ''}`} />
+                  </button>
                   <Badge variant={project.status === 'ACTIVE' ? 'success' : 'secondary'}>
                     {project.status}
                   </Badge>
@@ -276,6 +309,19 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                   </p>
                   <p className="text-[11px] text-muted-foreground mt-1">
                     Thematic research binders
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-5">
+                  <span className="text-xs font-semibold text-muted-foreground uppercase">
+                    Tasks
+                  </span>
+                  <p className="text-3xl font-extrabold text-foreground mt-2">
+                    {stats?.completedTaskCount || 0} / {stats?.taskCount || project.tasks?.length || 0}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground mt-1">
+                    Completed tasks
                   </p>
                 </CardContent>
               </Card>
@@ -479,10 +525,41 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
           </div>
         )}
 
-        {/* Tab 5: Audit Activity */}
-        {activeTab === 'activity' && (
+        {/* Tab 5: Tasks */}
+        {activeTab === 'tasks' && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-bold text-foreground">Project Tasks</h3>
+                <p className="text-xs text-muted-foreground">Manage your action items</p>
+              </div>
+              <Button size="sm" onClick={() => setIsTaskModalOpen(true)} leftIcon={<Plus className="w-3.5 h-3.5" />}>
+                Create Task
+              </Button>
+            </div>
+            {(!project.tasks || project.tasks.length === 0) ? (
+              <EmptyState
+                icon={<CheckSquare className="w-6 h-6" />}
+                title="No tasks in this project"
+                description="Create a task to keep track of your progress."
+                actionLabel="Create Task"
+                onAction={() => setIsTaskModalOpen(true)}
+                actionIcon={<Plus className="w-4 h-4" />}
+              />
+            ) : (
+              <div className="grid grid-cols-1 gap-4">
+                {project.tasks.map((task: any) => (
+                  <TaskCard key={task.id} task={task} />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Tab 6: Timeline (Audit Activity) */}
+        {activeTab === 'timeline' && (
           <Card className="p-5">
-            <CardTitle className="text-sm font-bold mb-4">Project Audit History</CardTitle>
+            <CardTitle className="text-sm font-bold mb-4">Project Timeline</CardTitle>
             {project.activities?.length === 0 ? (
               <p className="text-xs text-muted-foreground py-6 text-center">
                 No activity logged for this project yet.
@@ -555,6 +632,13 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
         isOpen={isCollectionModalOpen}
         onClose={() => setIsCollectionModalOpen(false)}
         defaultProjectId={projectId}
+        onCreated={fetchProjectData}
+      />
+
+      <NewTaskModal
+        isOpen={isTaskModalOpen}
+        onClose={() => setIsTaskModalOpen(false)}
+        projectId={projectId}
         onCreated={fetchProjectData}
       />
 

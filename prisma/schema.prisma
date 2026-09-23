@@ -25,6 +25,7 @@ model User {
   collections  Collection[]
   tags         Tag[]
   activities   Activity[]
+  tasks        Task[]
 }
 
 model Project {
@@ -37,6 +38,7 @@ model Project {
   icon        String        @default("Folder")
   status      String        @default("ACTIVE") // ACTIVE, ARCHIVED, COMPLETED
   visibility  String        @default("PRIVATE") // PRIVATE, SHARED, PUBLIC
+  isFavorite  Boolean       @default(false)
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 
@@ -45,8 +47,10 @@ model Project {
   collections Collection[]
   activities  Activity[]
   projectTags ProjectTag[]
+  tasks       Task[]
 
   @@index([userId, status])
+  @@index([userId, isFavorite])
 }
 
 model Collection {
@@ -87,15 +91,38 @@ model Document {
   abstract        String?
   summary         String?       // Extension hook for Phase 2 AI summary
   embeddingStatus String        @default("NONE") // NONE, PENDING, INDEXED (Phase 2 hook)
+  isFavorite      Boolean       @default(false)
+  isArchived      Boolean       @default(false)
+  version         Int           @default(1)
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
   notes           Note[]
   documentTags    DocumentTag[]
+  tasks           Task[]
+  versions        DocumentVersion[]
 
   @@index([userId])
   @@index([projectId])
   @@index([collectionId])
+  @@index([userId, isFavorite])
+  @@index([userId, isArchived])
+}
+
+model DocumentVersion {
+  id         String   @id @default(cuid())
+  documentId String
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  version    Int
+  fileName   String
+  fileSize   Int
+  mimeType   String
+  filePath   String
+  uploaderId String
+  createdAt  DateTime @default(now())
+
+  @@index([documentId])
+  @@index([documentId, version])
 }
 
 model Note {
@@ -113,10 +140,36 @@ model Note {
   updatedAt  DateTime  @updatedAt
 
   noteTags   NoteTag[]
+  tasks      Task[]
 
   @@index([userId])
   @@index([projectId])
   @@index([documentId])
+}
+
+model Task {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectId   String?
+  project     Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  documentId  String?
+  document    Document? @relation(fields: [documentId], references: [id], onDelete: SetNull)
+  noteId      String?
+  note        Note?     @relation(fields: [noteId], references: [id], onDelete: SetNull)
+  title       String
+  description String?
+  status      String    @default("TODO") // TODO, IN_PROGRESS, COMPLETED
+  priority    String    @default("MEDIUM") // LOW, MEDIUM, HIGH
+  dueDate     DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([projectId])
+  @@index([documentId])
+  @@index([noteId])
+  @@index([userId, status])
 }
 
 model Tag {
@@ -169,7 +222,7 @@ model Activity {
   projectId   String?
   project     Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
   action      String   // e.g. "PROJECT_CREATED", "DOC_UPLOADED", "NOTE_CREATED"
-  entityType  String   // "PROJECT", "DOCUMENT", "NOTE", "COLLECTION"
+  entityType  String   // "PROJECT", "DOCUMENT", "NOTE", "COLLECTION", "TASK"
   entityId    String
   entityTitle String
   details     String?

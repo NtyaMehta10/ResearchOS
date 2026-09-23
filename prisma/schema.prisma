@@ -26,6 +26,7 @@ model User {
   tags         Tag[]
   activities   Activity[]
   tasks        Task[]
+  inboxItems   InboxItem[]
 }
 
 model Project {
@@ -230,4 +231,21 @@ model Activity {
 
   @@index([userId, createdAt])
   @@index([projectId])
+}
+
+model InboxItem {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type         String   // e.g. NEW_DOCUMENT, NEW_NOTE, NEW_TASK, TASK_DUE, TASK_OVERDUE, IMPORTANT_PROJECT_ACTIVITY
+  message      String
+  resourceId   String
+  resourceType String   // e.g. "DOCUMENT", "NOTE", "TASK", "PROJECT"
+  isRead       Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([userId])
+  @@index([userId, isRead])
+  @@index([userId, type])
 }

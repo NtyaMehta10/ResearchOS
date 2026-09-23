@@ -1,5 +1,6 @@
 import prisma from '@/lib/db';
 import { logActivity } from './activityService';
+import { createInboxItem } from './inboxService';
 
 export interface CreateDocumentInput {
   userId: string;
@@ -138,6 +139,14 @@ export async function createDocument(input: CreateDocumentInput) {
     entityId: doc.id,
     entityTitle: doc.title,
     details: `Uploaded document: ${doc.title} (${doc.fileName})`,
+  });
+
+  await createInboxItem({
+    userId,
+    type: 'NEW_DOCUMENT',
+    message: `New document uploaded: ${doc.title}`,
+    resourceId: doc.id,
+    resourceType: 'DOCUMENT',
   });
 
   return doc;
@@ -320,6 +329,14 @@ export async function createDocumentVersion(
     entityId: existing.id,
     entityTitle: existing.title,
     details: `Uploaded version ${newVersionNumber} of document`,
+  });
+
+  await createInboxItem({
+    userId,
+    type: 'UPDATED_DOCUMENT',
+    message: `Document updated (version ${newVersionNumber}): ${existing.title}`,
+    resourceId: existing.id,
+    resourceType: 'DOCUMENT',
   });
 
   return { document: updatedDoc, version: newVersion };

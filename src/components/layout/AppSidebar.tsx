@@ -21,6 +21,7 @@ import {
   Sun,
   Moon,
   BookOpen,
+  Inbox as InboxIcon,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -43,6 +44,29 @@ export function AppSidebar({ onNewProject }: AppSidebarProps) {
   const { theme, setTheme, resolvedTheme } = useTheme();
   const [projects, setProjects] = useState<ProjectQuickLink[]>([]);
   const [projectsExpanded, setProjectsExpanded] = useState(true);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    async function fetchUnreadCount() {
+      try {
+        const res = await fetch('/api/inbox/unread');
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success) {
+            setUnreadCount(json.data.count);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load unread count:', err);
+      }
+    }
+
+    if (user) {
+      fetchUnreadCount();
+      const interval = setInterval(fetchUnreadCount, 30000); // Polling every 30s
+      return () => clearInterval(interval);
+    }
+  }, [user, pathname]);
 
   useEffect(() => {
     async function loadProjects() {
@@ -63,6 +87,7 @@ export function AppSidebar({ onNewProject }: AppSidebarProps) {
 
   const navItems = [
     { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+    { label: 'Inbox', href: '/inbox', icon: InboxIcon, badge: unreadCount },
     { label: 'Projects', href: '/projects', icon: FolderKanban },
     { label: 'Documents', href: '/documents', icon: FileText },
     { label: 'Notes', href: '/notes', icon: StickyNote },
@@ -126,15 +151,22 @@ export function AppSidebar({ onNewProject }: AppSidebarProps) {
                   )
                 )}
               >
-                <Icon
-                  className={twMerge(
-                    clsx(
-                      'w-4 h-4 transition-colors',
-                      isActive ? 'text-indigo-600 dark:text-indigo-400' : 'group-hover:text-foreground'
-                    )
-                  )}
-                />
-                <span>{item.label}</span>
+                <div className="flex items-center gap-3 flex-1">
+                  <Icon
+                    className={twMerge(
+                      clsx(
+                        'w-4 h-4 transition-colors',
+                        isActive ? 'text-indigo-600 dark:text-indigo-400' : 'group-hover:text-foreground'
+                      )
+                    )}
+                  />
+                  <span>{item.label}</span>
+                </div>
+                {item.badge !== undefined && item.badge > 0 && (
+                  <span className="inline-flex items-center justify-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-500 text-white shadow-sm shrink-0">
+                    {item.badge > 99 ? '99+' : item.badge}
+                  </span>
+                )}
               </Link>
             );
           })}

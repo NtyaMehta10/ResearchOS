@@ -1,5 +1,6 @@
 import prisma from '@/lib/db';
 import { logActivity } from './activityService';
+import { createInboxItem } from './inboxService';
 
 export interface CreateNoteInput {
   userId: string;
@@ -104,6 +105,14 @@ export async function createNote(input: CreateNoteInput) {
     entityId: note.id,
     entityTitle: note.title,
     details: `Authored note: ${note.title}`,
+  });
+
+  await createInboxItem({
+    userId,
+    type: 'NEW_NOTE',
+    message: `New note authored: ${note.title}`,
+    resourceId: note.id,
+    resourceType: 'NOTE',
   });
 
   return note;

@@ -1,5 +1,6 @@
 import prisma from '@/lib/db';
 import { logActivity } from './activityService';
+import { createInboxItem } from './inboxService';
 
 export interface CreateTaskInput {
   userId: string;
@@ -68,6 +69,25 @@ export async function createTask(input: CreateTaskInput) {
     details: `Created task: ${task.title}`,
   });
 
+  await createInboxItem({
+    userId,
+    type: 'NEW_TASK',
+    message: `New task assigned: ${task.title}`,
+    resourceId: task.id,
+    resourceType: 'TASK',
+  });
+
+  if (task.dueDate && task.status !== 'COMPLETED') {
+    const isOverdue = new Date(task.dueDate) < new Date();
+    await createInboxItem({
+      userId,
+      type: isOverdue ? 'TASK_OVERDUE' : 'TASK_DUE',
+      message: `Task ${isOverdue ? 'overdue' : 'due soon'}: ${task.title}`,
+      resourceId: task.id,
+      resourceType: 'TASK',
+    });
+  }
+
   return task;
 }
 
@@ -106,6 +126,17 @@ export async function updateTask(userId: string, taskId: string, input: UpdateTa
     entityTitle: updated.title,
     details: isCompleted ? 'Completed task' : 'Updated task details',
   });
+
+  if (input.dueDate !== undefined && updated.dueDate && updated.status !== 'COMPLETED') {
+    const isOverdue = new Date(updated.dueDate) < new Date();
+    await createInboxItem({
+      userId,
+      type: isOverdue ? 'TASK_OVERDUE' : 'TASK_DUE',
+      message: `Task ${isOverdue ? 'overdue' : 'due soon'}: ${updated.title}`,
+      resourceId: updated.id,
+      resourceType: 'TASK',
+    });
+  }
 
   return updated;
 }

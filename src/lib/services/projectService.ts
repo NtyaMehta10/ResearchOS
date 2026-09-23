@@ -1,5 +1,6 @@
 import prisma from '@/lib/db';
 import { logActivity } from './activityService';
+import { createInboxItem } from './inboxService';
 
 export interface CreateProjectInput {
   userId: string;
@@ -179,6 +180,24 @@ export async function updateProject(userId: string, projectId: string, input: Up
     entityTitle: updated.title,
     details: isArchived ? 'Archived research project' : 'Updated project details',
   });
+
+  if (isArchived) {
+    await createInboxItem({
+      userId,
+      type: 'IMPORTANT_PROJECT_ACTIVITY',
+      message: `Project archived: ${updated.title}`,
+      resourceId: updated.id,
+      resourceType: 'PROJECT',
+    });
+  } else if (existing.status === 'ARCHIVED' && data.status === 'ACTIVE') {
+    await createInboxItem({
+      userId,
+      type: 'IMPORTANT_PROJECT_ACTIVITY',
+      message: `Project restored: ${updated.title}`,
+      resourceId: updated.id,
+      resourceType: 'PROJECT',
+    });
+  }
 
   return updated;
 }

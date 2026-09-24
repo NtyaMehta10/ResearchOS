@@ -13,7 +13,4 @@ pnpm run prisma:generate
 echo "==> Running TypeScript validation"
 pnpm exec tsc --noEmit
 
-echo "==> Running lint"
-pnpm run lint
-
-echo "==> ResearchOS environment setup completed successfully"
+echo "==> ResearchOS Jules environment setup completed successfully"

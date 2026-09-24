@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import path from 'path';
 import fs from 'fs';
 import { getAuthenticatedUser } from '@/lib/auth';
-import { apiNotFound, apiUnauthorized } from '@/lib/api-response';
+import { apiNotFound, apiUnauthorized, apiBadRequest } from '@/lib/api-response';
 import { getDocumentById } from '@/lib/services/documentService';
 
 export async function GET(
@@ -18,7 +18,12 @@ export async function GET(
   if (!doc) return apiNotFound('Document not found');
 
   const relativePath = doc.filePath.startsWith('/') ? doc.filePath.slice(1) : doc.filePath;
-  const absolutePath = path.join(process.cwd(), relativePath);
+  const absolutePath = path.resolve(process.cwd(), relativePath);
+  const uploadsDir = path.join(process.cwd(), 'uploads');
+
+  if (!absolutePath.startsWith(uploadsDir + path.sep) && absolutePath !== uploadsDir) {
+    return apiBadRequest('Invalid file path');
+  }
 
   const safeFileName = doc.fileName.replace(/["\\\r\n]/g, '_');
 

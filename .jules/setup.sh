@@ -4,16 +4,16 @@ set -euo pipefail
 
 echo "==> ResearchOS Jules environment setup"
 
-echo "==> Installing locked dependencies"
-npm ci
+echo "==> Installing locked dependencies with pnpm"
+pnpm install --frozen-lockfile
 
 echo "==> Generating Prisma Client"
-npm run prisma:generate
+pnpm run prisma:generate
 
 echo "==> Running TypeScript validation"
-npx tsc --noEmit
+pnpm exec tsc --noEmit
 
 echo "==> Running lint"
-npm run lint
+pnpm run lint
 
 echo "==> ResearchOS environment setup completed successfully"

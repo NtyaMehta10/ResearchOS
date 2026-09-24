@@ -21,7 +21,9 @@ export async function GET(
   const absolutePath = path.resolve(process.cwd(), relativePath);
   const uploadsDir = path.join(process.cwd(), 'uploads');
 
-  if (!absolutePath.startsWith(uploadsDir)) {
+  const safeUploadsDir = uploadsDir.endsWith(path.sep) ? uploadsDir : uploadsDir + path.sep;
+
+  if (!absolutePath.startsWith(safeUploadsDir)) {
     return apiBadRequest('Invalid file path');
   }
 

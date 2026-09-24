@@ -31,9 +31,11 @@ export async function searchAll(options: SearchQueryOptions) {
     return results;
   }
 
+  const queries: Promise<void>[] = [];
+
   // 1. Projects search
   if (type === 'all' || type === 'projects') {
-    results.projects = await prisma.project.findMany({
+    queries.push(prisma.project.findMany({
       where: {
         userId,
         ...(projectId ? { id: projectId } : {}),
@@ -48,12 +50,12 @@ export async function searchAll(options: SearchQueryOptions) {
         projectTags: { include: { tag: true } },
         _count: { select: { documents: true, notes: true } },
       },
-    });
+    }).then(res => { results.projects = res; }));
   }
 
   // 2. Documents search
   if (type === 'all' || type === 'documents') {
-    results.documents = await prisma.document.findMany({
+    queries.push(prisma.document.findMany({
       where: {
         userId,
         ...(projectId ? { projectId } : {}),
@@ -73,12 +75,12 @@ export async function searchAll(options: SearchQueryOptions) {
         collection: { select: { id: true, name: true, color: true } },
         documentTags: { include: { tag: true } },
       },
-    });
+    }).then(res => { results.documents = res; }));
   }
 
   // 3. Notes search
   if (type === 'all' || type === 'notes') {
-    results.notes = await prisma.note.findMany({
+    queries.push(prisma.note.findMany({
       where: {
         userId,
         ...(projectId ? { projectId } : {}),
@@ -94,12 +96,12 @@ export async function searchAll(options: SearchQueryOptions) {
         document: { select: { id: true, title: true } },
         noteTags: { include: { tag: true } },
       },
-    });
+    }).then(res => { results.notes = res; }));
   }
 
   // 4. Collections search
   if (type === 'all' || type === 'collections') {
-    results.collections = await prisma.collection.findMany({
+    queries.push(prisma.collection.findMany({
       where: {
         userId,
         ...(projectId ? { projectId } : {}),
@@ -113,8 +115,10 @@ export async function searchAll(options: SearchQueryOptions) {
         project: { select: { id: true, title: true, color: true } },
         _count: { select: { documents: true } },
       },
-    });
+    }).then(res => { results.collections = res; }));
   }
+
+  await Promise.all(queries);
 
   results.totalCount =
     results.projects.length +

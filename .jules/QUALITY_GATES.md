@@ -1,34 +1,23 @@
-# ResearchOS Quality Gates
-
-## Purpose
-
+ResearchOS Quality Gates
+Purpose
 Use this file as the final quality checklist for ResearchOS tasks.
 
 A task is complete only when the applicable gates pass or any unavoidable limitation is clearly reported.
 
----
-
-## 1. Functional Gate
-
+1. Functional Gate
 Confirm that:
 
-- the requested functionality is actually implemented;
-- the feature works through the intended user flow;
-- required backend and frontend pieces are connected;
-- required data is persisted correctly where applicable;
-- existing functionality still works.
-
+the requested functionality is actually implemented;
+the feature works through the intended user flow;
+required backend and frontend pieces are connected;
+required data is persisted correctly where applicable;
+existing functionality still works.
 Do not consider placeholder UI or disconnected code complete.
 
----
-
-## 2. Type Safety Gate
-
+2. Type Safety Gate
 Run the appropriate TypeScript validation.
 
 Preferred project command:
-
-```bash
 pnpm exec tsc --noEmit --incremental false
 
 Resolve errors introduced by the current task.

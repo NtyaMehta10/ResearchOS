@@ -28,7 +28,31 @@ Ask for user input only when the required information cannot reasonably be deter
 
 ---
 
-## 2. Core Execution Loop
+## 2. ResearchOS Jules Guidance Files
+
+For non-trivial tasks, use the following project-specific guidance files:
+
+- `.jules/TASK_CONTRACT.md`
+- `.jules/PROJECT_CONTEXT.md`
+- `.jules/QUALITY_GATES.md`
+
+These files define:
+
+- how tasks should be executed;
+- how ResearchOS should be engineered;
+- how completed work should be verified.
+
+Read the relevant guidance before beginning substantial implementation work.
+
+Do not repeatedly reread unchanged guidance files during the same task when their contents are already understood.
+
+This `AGENTS.md` remains the primary autonomous operating instruction. The `.jules/` files provide additional task-specific execution and quality guidance.
+
+If instructions appear to overlap, follow the safest interpretation that preserves correctness, existing functionality, security, and the task requirements.
+
+---
+
+## 3. Core Execution Loop
 
 For every task, follow this general loop:
 
@@ -47,9 +71,11 @@ Do not skip investigation merely because the requested change appears simple.
 
 Do not perform large changes before understanding the existing implementation.
 
+For complex tasks, divide the work into logical stages and verify meaningful stages incrementally.
+
 ---
 
-## 3. Autonomous Problem Solving
+## 4. Autonomous Problem Solving
 
 If an error or unexpected condition occurs:
 
@@ -66,9 +92,11 @@ Do not wait for instructions when the problem can reasonably be solved from avai
 
 Only ask for help when genuinely blocked by information, authorization, credentials, or an external decision that cannot be determined safely.
 
+If the requested approach is blocked but the underlying objective can be achieved through a safe and reasonable alternative, use the alternative and continue.
+
 ---
 
-## 4. Anti-Stall Rules
+## 5. Anti-Stall Rules
 
 Avoid getting stuck on small operations.
 
@@ -80,17 +108,20 @@ Avoid getting stuck on small operations.
 - run a long-lived process when a finite command can perform the required verification;
 - leave a development server running when it is not required;
 - assume a command succeeded merely because it produced no visible error;
-- spend excessive time on a trivial verification step.
+- spend excessive time on a trivial verification step;
+- repeatedly retry an operation that has already demonstrated the same failure;
+- remain in planning or investigation mode after sufficient information is available.
 
 ### If a command appears stuck:
 
 1. Determine whether it is expected to remain running.
 2. Determine whether meaningful output or progress is occurring.
-3. If it is a long-running process and is not required, stop using it and choose a finite alternative.
-4. If it is unexpectedly stalled, diagnose the cause.
-5. Do not repeatedly retry the same stalled command.
-6. Use a simpler or more targeted verification method.
-7. Continue with the task if sufficient evidence can be obtained another way.
+3. Determine whether the command is actually necessary.
+4. If it is a long-running process and is not required, stop using it and choose a finite alternative.
+5. If it is unexpectedly stalled, diagnose the cause.
+6. Do not repeatedly retry the same stalled command.
+7. Use a simpler or more targeted verification method.
+8. Continue with the task if sufficient evidence can be obtained another way.
 
 ### Verification commands should preferably be:
 
@@ -101,30 +132,37 @@ Avoid getting stuck on small operations.
 
 Do not spend many minutes verifying something that can be established with a direct file inspection, targeted test, type check, lint check, or build.
 
+If a command is taking substantially longer than reasonably expected for its purpose, reassess the approach instead of waiting indefinitely.
+
 ---
 
-## 5. Long-Running Development Servers
+## 6. Long-Running Development Servers
 
 Do not use long-running development servers as the default verification mechanism.
 
 Do not rely on commands such as:
 
-- `npm run dev`
+- `npm run dev`;
 - watch scripts;
 - interactive development processes;
-- indefinite background services
+- indefinite background services;
 
 when a finite verification command is sufficient.
 
-For Jules environment setup, use install, generation, lint, test, build, or other finite commands.
+For Jules environment setup, prefer install, generation, lint, test, build, or other finite commands.
 
-If a development server is genuinely required for a specific browser or integration verification step, start and manage it deliberately and verify that it is actually running before interacting with it.
+If a development server is genuinely required for a specific browser or integration verification step:
+
+1. start it deliberately;
+2. confirm that it actually started;
+3. perform the required verification;
+4. stop or clean up the process when it is no longer needed.
 
 Never wait indefinitely for a server to become ready.
 
 ---
 
-## 6. Preserve Existing Work
+## 7. Preserve Existing Work
 
 Treat existing working code as intentional unless evidence shows otherwise.
 
@@ -150,7 +188,7 @@ If a previous implementation appears to have disappeared or been reverted unexpe
 
 ---
 
-## 7. Scope Discipline
+## 8. Scope Discipline
 
 Implement the requested task completely without silently expanding the scope.
 
@@ -171,9 +209,11 @@ If a useful improvement is discovered outside the task:
 
 Keep the final diff proportional to the task.
 
+Do not confuse thoroughness with unnecessary scope expansion.
+
 ---
 
-## 8. ResearchOS Architecture
+## 9. ResearchOS Architecture
 
 ResearchOS is an existing full-stack application.
 
@@ -199,9 +239,11 @@ Do not introduce a new framework, ORM, database, state-management system, or maj
 
 Do not replace working infrastructure merely because another technology is preferred.
 
+Treat the repository's existing implementation as the source of truth for architecture.
+
 ---
 
-## 9. Dependency Discipline
+## 10. Dependency Discipline
 
 Before adding a dependency:
 
@@ -213,14 +255,28 @@ Before adding a dependency:
 When adding a dependency:
 
 - update the appropriate lockfile;
+- use the repository's existing package manager;
 - verify installation;
 - verify the affected functionality.
 
+ResearchOS currently uses pnpm.
+
+Respect:
+
+- `package.json`;
+- `pnpm-lock.yaml`;
+- existing package scripts;
+- existing dependency versions.
+
+Do not introduce a second package manager or create another lockfile.
+
 Do not install unnecessary packages merely for experimentation.
+
+Do not use dependency-bypass flags such as `--force` or `--legacy-peer-deps` as the first solution to a dependency conflict.
 
 ---
 
-## 10. Database Safety
+## 11. Database Safety
 
 Treat Prisma and the database schema as critical application infrastructure.
 
@@ -238,9 +294,11 @@ Never delete or recreate the database merely to bypass an ordinary development p
 
 Avoid destructive database operations unless explicitly required and safe within the task context.
 
+Do not modify database structure without considering existing application behavior and data relationships.
+
 ---
 
-## 11. Secrets and Credentials
+## 12. Secrets and Credentials
 
 Never commit:
 
@@ -255,11 +313,17 @@ Use environment variables and the repository's existing configuration mechanisms
 
 Never invent missing credentials.
 
-If a required credential is genuinely unavailable, clearly identify the blocker.
+Do not expose server-side secrets to client-side code.
+
+If a required credential is genuinely unavailable:
+
+1. determine whether a safe local or development alternative exists;
+2. use it if appropriate;
+3. otherwise clearly identify the blocker.
 
 ---
 
-## 12. Verification Standard
+## 13. Verification Standard
 
 A task is not complete merely because code was written.
 
@@ -280,211 +344,7 @@ Do not run every possible command unnecessarily.
 
 Use the smallest sufficient verification set that provides strong evidence of correctness.
 
-If a verification command fails:
+For relevant TypeScript validation, prefer:
 
-- diagnose it;
-- fix the cause;
-- rerun the relevant verification.
-
-Do not hide or suppress failures.
-
-Do not modify tests simply to make an incorrect implementation pass.
-
----
-
-## 13. Frontend Verification
-
-For frontend work, compilation is not sufficient.
-
-Verify the actual feature when possible.
-
-Check:
-
-- visual hierarchy;
-- spacing;
-- typography;
-- responsive behavior;
-- interaction states;
-- loading states;
-- empty states;
-- error states;
-- disabled states;
-- accessibility;
-- actual data integration.
-
-Do not declare a UI feature complete merely because the page renders.
-
-If browser or visual verification is available and appropriate, use it for meaningful UI changes.
-
----
-
-## 14. UI/UX Quality
-
-ResearchOS should feel like a serious, polished research product.
-
-Use the existing design system and visual language.
-
-Prefer:
-
-- clear information hierarchy;
-- consistent spacing;
-- restrained visual complexity;
-- readable typography;
-- purposeful animation;
-- strong empty states;
-- clear feedback;
-- responsive layouts;
-- accessible interactions.
-
-Do not introduce generic AI-dashboard aesthetics merely because they are easy to generate.
-
-Do not add decorative UI that does not improve usability.
-
----
-
-## 15. Testing and Regression Protection
-
-When modifying existing functionality:
-
-- identify likely regression areas;
-- run relevant existing tests;
-- add or update tests when meaningful new behavior is introduced;
-- preserve existing tests unless they are genuinely obsolete.
-
-If a test fails before the change, distinguish a pre-existing failure from a regression caused by the current work.
-
-Do not remove tests simply because they are inconvenient.
-
----
-
-## 16. Error Recovery
-
-When a task encounters repeated failure:
-
-Do not enter a loop such as:
-
-    run command
-    fail
-    run same command
-    fail
-    modify random file
-    run same command
-    fail
-
-Instead:
-
-    observe failure
-        ↓
-    classify failure
-        ↓
-    inspect evidence
-        ↓
-    form new hypothesis
-        ↓
-    make bounded change
-        ↓
-    verify
-        ↓
-    reassess
-
-If an approach has failed repeatedly, change the approach.
-
-If the task cannot be completed safely, report the exact blocker rather than pretending the task succeeded.
-
----
-
-## 17. Time and Effort Discipline
-
-Spend effort according to task importance.
-
-Do not spend disproportionate time on trivial operations.
-
-For small tasks:
-
-- inspect only the necessary files;
-- make the focused change;
-- perform targeted verification;
-- finish.
-
-For complex tasks:
-
-- inspect the architecture first;
-- break the implementation into coherent stages;
-- verify after meaningful stages;
-- avoid unnecessary exploration.
-
-Do not turn a simple task into a repository-wide investigation without a concrete reason.
-
----
-
-## 18. Git Safety
-
-Do not destroy repository history or existing work.
-
-Do not use destructive commands such as repository resets or broad file restoration as a debugging shortcut.
-
-Before completion:
-
-- inspect changed files;
-- inspect the final diff;
-- ensure unrelated files were not changed;
-- ensure required files are present;
-- ensure temporary files are not unintentionally included.
-
-Do not claim that changes were committed, pushed, or published unless the action actually occurred.
-
----
-
-## 19. Completion Criteria
-
-Before declaring the task complete, verify that:
-
-- the requested functionality is implemented;
-- the implementation is integrated with the existing application;
-- existing functionality remains intact;
-- relevant verification has passed;
-- obvious errors have been resolved;
-- the final diff is within scope;
-- known limitations are documented.
-
-The final response should contain:
-
-1. what was implemented;
-2. important files changed;
-3. verification performed;
-4. known limitations or remaining issues;
-5. any recommended follow-up work.
-
-Do not claim successful verification that was not actually performed.
-
----
-
-## 20. Final Principle
-
-Prefer:
-
-    Understand
-        ↓
-    Plan
-        ↓
-    Implement
-        ↓
-    Verify
-        ↓
-    Diagnose
-        ↓
-    Re-verify
-        ↓
-    Review
-        ↓
-    Complete
-
-over:
-
-    Guess
-        ↓
-    Modify
-        ↓
-    Assume it works
-
-Correctness, reliability, maintainability, and focused execution are more important than unnecessary complexity.
+```bash
+pnpm exec tsc --noEmit --incremental false

@@ -163,6 +163,33 @@ async function main() {
     await prisma.$disconnect();
   });
 
+
+  await test('File download: path prefix attack blocked', async () => {
+    const { PrismaClient } = await import('@prisma/client');
+    const prisma = new PrismaClient();
+    const user = await prisma.user.findFirst({ where: { email: userA.email } });
+
+    const doc = await prisma.document.create({
+      data: {
+        userId: user.id,
+        title: 'Path Prefix Attack Doc',
+        fileName: 'secret.txt',
+        filePath: '../uploads-malicious/secret.txt',
+        fileSize: 100,
+        mimeType: 'text/plain',
+      }
+    });
+
+    const res = await fetchWithRetry(`${BASE_URL}/api/documents/${doc.id}/download`, {
+      headers: { 'Authorization': `Bearer ${tokenA}` }
+    });
+
+    assert(res.status === 400, `Expected 400 (Invalid file path), got ${res.status}`);
+
+    await prisma.document.delete({ where: { id: doc.id } });
+    await prisma.$disconnect();
+  });
+
   console.log(`\n${passCount + failCount} tests run: ${passCount} passed, ${failCount} failed`);
   if (failCount > 0) process.exit(1);
 }

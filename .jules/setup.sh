@@ -11,6 +11,6 @@ echo "==> Generating Prisma Client"
 pnpm run prisma:generate
 
 echo "==> Running TypeScript validation"
-pnpm exec tsc --noEmit
+pnpm exec tsc --noEmit --incremental false
 
 echo "==> ResearchOS Jules environment setup completed successfully"
